@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<Foundry>
+<VM>
+<VMId type="string">52 de d0 d2 4d 13 5e 91-8f 08 f6 3c 29 fe ae 73</VMId>
+<ClientMetaData>
+<clientMetaDataAttributes/>
+<HistoryEventList/></ClientMetaData>
+<vmxPathName type="string">OpenWrt-Node3.vmx</vmxPathName></VM></Foundry>

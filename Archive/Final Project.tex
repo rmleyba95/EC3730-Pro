@@ -1,0 +1,182 @@
+\documentclass[conference]{IEEEtran}
+
+\usepackage{cite}
+\usepackage{url}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{float}
+\usepackage{hyperref}
+
+\title{
+Investigating and Implementing LibreRouter and LibreMesh:
+Virtualized and Raspberry Pi-Based Mesh Networking
+}
+
+\author{
+\IEEEauthorblockN{Your Name}
+\IEEEauthorblockA{
+EC3730 Final Project
+}
+}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+
+This project investigates LibreRouter and LibreMesh, open-source community networking technologies built on top of OpenWrt. The project explores the architecture, implementation, vulnerabilities, and deployment challenges associated with decentralized mesh networking systems. A virtualized OpenWrt environment was first developed using VMware Workstation Pro to simulate a four-node LibreMesh network topology. The project will later extend the deployment to Raspberry Pi hardware platforms for physical mesh networking experiments and performance evaluation.
+
+\end{abstract}
+
+\section{Introduction}
+
+Community mesh networks provide decentralized communication infrastructure capable of operating independently of centralized Internet Service Providers (ISPs). LibreRouter and LibreMesh were developed to support resilient, community-owned wireless infrastructure using open-source software and commodity hardware.
+
+This project investigates the deployment and operation of LibreMesh-based networking systems using both virtualized and physical implementations. The primary goals include evaluating routing behavior, deployment complexity, security considerations, network resilience, and practical limitations of community mesh networking technologies.
+
+In addition to traditional research analysis, this report maintains a reproducible engineering notebook style documenting implementation steps, configuration procedures, troubleshooting observations, and experimental outcomes throughout the project lifecycle.
+
+\section{Background Research}
+
+\subsection{OpenWrt}
+
+OpenWrt is an open-source Linux-based operating system designed primarily for embedded networking devices such as routers and access points. Unlike traditional vendor firmware, OpenWrt provides a writable filesystem, package management system, and modular architecture allowing users to customize routing, firewall, wireless, and network management functionality.
+
+The OpenWrt ecosystem supports x86 virtualized environments in addition to physical embedded hardware, making it suitable for experimental mesh networking research.
+
+\subsection{LibreMesh}
+
+LibreMesh is a framework built on top of OpenWrt that simplifies the deployment of decentralized mesh networking infrastructure. The platform automates many aspects of wireless mesh configuration while supporting routing protocols such as BATMAN-adv and BMX7.
+
+LibreMesh was designed to support community-operated networks where nodes dynamically discover neighboring devices and establish resilient communication paths without centralized infrastructure.
+
+\subsection{LibreRouter}
+
+LibreRouter is an open-hardware networking platform developed specifically for community mesh deployments. The platform combines OpenWrt-based firmware with wireless hardware optimized for long-range and community-managed networking applications.
+
+\section{Literature Review and Security Analysis}
+
+\subsection{Identified Weaknesses and Vulnerabilities}
+
+Several security concerns and operational limitations were identified during preliminary literature review:
+
+\begin{itemize}
+    \item Firmware update vulnerabilities in OpenWrt package management systems
+    \item Mesh routing attacks including route poisoning and malicious node participation
+    \item Wireless sniffing and unauthorized network access
+    \item Resource exhaustion and denial-of-service attacks
+    \item Complexity of maintaining decentralized routing infrastructure
+\end{itemize}
+
+\section{Virtualized OpenWrt Deployment}
+
+\subsection{Virtualization Environment}
+
+VMware Workstation Pro 17 was selected as the virtualization platform for the initial implementation phase. Virtualization allowed rapid deployment, rollback capability through snapshots, reproducible experimentation, and simplified troubleshooting prior to deployment on physical Raspberry Pi hardware.
+
+\subsection{OpenWrt Image Preparation}
+
+The OpenWrt x86\_64 ext4 combined image was downloaded from the official OpenWrt release repository. Since VMware does not natively boot raw IMG files efficiently, the OpenWrt disk image was converted from IMG format into VMware VMDK format prior to deployment.
+
+\subsection{Virtual Machine Configuration}
+
+A custom virtual machine configuration was selected in VMware Workstation Pro to allow manual control over networking interfaces and storage configuration.
+
+The following VM specifications were used:
+
+\begin{table}[H]
+\centering
+\caption{Initial OpenWrt VM Configuration}
+\begin{tabular}{|l|l|}
+\hline
+Setting & Value \\ \hline
+Guest OS & Other Linux 5.x 64-bit \\ \hline
+vCPUs & 1 \\ \hline
+Memory & 256 MB \\ \hline
+Primary Disk & OpenWrt VMDK \\ \hline
+Network Adapter 1 & NAT \\ \hline
+Network Adapter 2 & Host-only \\ \hline
+\end{tabular}
+\end{table}
+
+\subsection{Network Interface Design}
+
+Two virtual network adapters were configured for each virtual router node:
+
+\begin{itemize}
+    \item NAT adapter for WAN connectivity and package installation
+    \item Host-only adapter for internal mesh backbone communication
+\end{itemize}
+
+This architecture allows the virtual environment to simulate isolated mesh connectivity between router nodes while still maintaining Internet access for software installation and updates.
+
+\subsection{Initial Boot Process}
+
+The OpenWrt virtual machine booted successfully after the VMDK disk image was attached to the VMware virtual SCSI controller. During startup, OpenWrt successfully initialized both virtual Ethernet interfaces:
+
+\begin{lstlisting}
+eth0 NIC Link is Up
+eth1 NIC Link is Up
+br-lan entered forwarding state
+\end{lstlisting}
+
+The successful initialization of both interfaces confirmed that VMware virtual networking devices were correctly recognized by the OpenWrt kernel.
+
+\subsection{Implementation Notes}
+
+\begin{itemize}
+    \item VMware generated a warning regarding a missing host CD/DVD device during startup.
+    \item The warning was safely ignored because OpenWrt boots directly from the virtual disk image and does not require installation media after deployment.
+    \item OpenWrt successfully booted into the root shell environment.
+    \item The system displayed a migration notice indicating OpenWrt's transition from the legacy \texttt{opkg} package manager to the newer \texttt{apk} package management system.
+\end{itemize}
+
+\section{Planned LibreMesh Deployment}
+
+The next implementation phase will involve:
+
+\begin{itemize}
+    \item Installing LibreMesh packages
+    \item Configuring BATMAN-adv mesh routing
+    \item Cloning the initial VM into four router nodes
+    \item Constructing a multi-hop virtual mesh topology
+    \item Performing connectivity and routing validation tests
+\end{itemize}
+
+\section{Future Raspberry Pi Deployment}
+
+The final implementation stage will migrate the virtualized mesh environment onto Raspberry Pi hardware devices running OpenWrt and LibreMesh.
+
+The Raspberry Pi deployment will evaluate:
+
+\begin{itemize}
+    \item Physical wireless mesh formation
+    \item Real-world throughput and latency
+    \item Hardware limitations
+    \item Deployment obstacles
+    \item Inter-group node interoperability
+\end{itemize}
+
+\section{Conclusion}
+
+The initial virtualization phase successfully established a functional OpenWrt router environment capable of supporting future LibreMesh experimentation. The implementation demonstrated the practicality of virtualized router deployment using VMware Workstation Pro and established the networking foundation necessary for future multi-node mesh routing experiments.
+
+\bibliographystyle{IEEEtran}
+
+\begin{thebibliography}{99}
+
+\bibitem{openwrt}
+OpenWrt Project, ``OpenWrt Documentation,'' [Online]. Available: \url{https://openwrt.org}
+
+\bibitem{libremesh}
+LibreMesh Project, ``LibreMesh Documentation,'' [Online]. Available: \url{https://libremesh.org}
+
+\bibitem{bmx7}
+BMX7 Routing Protocol, ``BMX7 GitHub Repository,'' [Online]. Available: \url{https://github.com/bmx-routing/bmx7}
+
+\end{thebibliography}
+
+\end{document}

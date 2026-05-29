@@ -1,0 +1,12 @@
+*.aux
+*.log
+*.out
+*.toc
+*.bbl
+*.blg
+*.synctex.gz
+*.iso
+*.vmdk
+*.vmem
+*.vmsn
+*.img

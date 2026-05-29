@@ -1,0 +1,535 @@
+\documentclass[conference]{IEEEtran}
+
+\usepackage{cite}
+\usepackage{url}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{float}
+\usepackage{hyperref}
+
+\title{
+Investigating and Implementing LibreRouter and LibreMesh:
+Virtualized and Raspberry Pi-Based Mesh Networking
+}
+
+\author{
+\IEEEauthorblockN{\small
+Bastas, Dimitrios (SUPREMER LEFTIEUENT COMMANDER)\\
+Kamilos, Dimitrios (SUPREMEISH RIGHTIEUNENT COMMANDER)\\
+Robert Leyba (LT)\\
+Rachel Goldstein (LT)\\
+Margaret Moore (LTJG)
+}
+\IEEEauthorblockA{
+EC3730 Final Project
+}
+}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+
+This project investigates LibreRouter and LibreMesh, open-source community networking technologies built on top of OpenWrt. The project explores the architecture, implementation, vulnerabilities, and deployment challenges associated with decentralized mesh networking systems.
+
+A virtualized OpenWrt environment was developed using VMware Workstation Pro to simulate a four-node routed mesh backbone topology. The environment established reproducible experimentation capabilities for distributed routing analysis, virtualization behavior, and future LibreMesh deployment.
+
+The project will later extend the deployment onto Raspberry Pi hardware platforms for physical mesh networking experimentation and wireless performance evaluation.
+
+\end{abstract}
+
+\section{Introduction}
+
+Community mesh networks provide decentralized communication infrastructure capable of operating independently of centralized Internet Service Providers (ISPs). LibreRouter and LibreMesh were developed to support resilient, community-owned wireless infrastructure using open-source software and commodity hardware.
+
+This project investigates the deployment and operation of LibreMesh-based networking systems using both virtualized and physical implementations. The primary goals include evaluating routing behavior, deployment complexity, security considerations, network resilience, and practical limitations of community mesh networking technologies.
+
+In addition to traditional research analysis, this report maintains a reproducible engineering notebook style documenting implementation steps, troubleshooting observations, operational anomalies, and experimental outcomes throughout the project lifecycle.
+
+\section{Background Research}
+
+\subsection{OpenWrt}
+
+OpenWrt is an open-source Linux-based operating system designed primarily for embedded networking devices such as routers and access points. Unlike traditional vendor firmware, OpenWrt provides a writable filesystem, package management system, and modular architecture allowing users to customize routing, firewall, wireless, and network management functionality.
+
+The OpenWrt ecosystem supports x86 virtualized environments in addition to physical embedded hardware, making it suitable for experimental mesh networking research.
+
+\subsection{LibreMesh}
+
+LibreMesh is a framework built on top of OpenWrt that simplifies deployment of decentralized mesh networking infrastructure. The platform automates many aspects of wireless mesh configuration while supporting routing protocols such as BATMAN-adv and BMX7.
+
+LibreMesh was designed to support community-operated networks where nodes dynamically discover neighboring devices and establish resilient communication paths without centralized infrastructure.
+
+\subsection{LibreRouter}
+
+LibreRouter is an open-hardware networking platform developed specifically for community mesh deployments. The platform combines OpenWrt-based firmware with wireless hardware optimized for long-range and community-managed networking applications.
+
+\section{Literature Review and Security Analysis}
+
+\subsection{Identified Weaknesses and Vulnerabilities}
+
+Several security concerns and operational limitations were identified during preliminary literature review:
+
+\begin{itemize}
+    \item Firmware update vulnerabilities in OpenWrt package management systems
+    \item Mesh routing attacks including route poisoning and malicious node participation
+    \item Wireless sniffing and unauthorized network access
+    \item Resource exhaustion and denial-of-service attacks
+    \item Complexity of maintaining decentralized routing infrastructure
+\end{itemize}
+
+\section{Virtualized OpenWrt Deployment}
+
+\subsection{Virtualization Environment}
+
+VMware Workstation Pro 17 was selected as the virtualization platform for the initial implementation phase. Virtualization provided rapid deployment, rollback capability through snapshots, reproducible experimentation, and simplified troubleshooting prior to deployment on physical Raspberry Pi hardware.
+
+\subsection{OpenWrt Image Preparation}
+
+The OpenWrt x86\_64 ext4 combined image was downloaded from the official OpenWrt release repository. Since VMware does not natively boot raw IMG files efficiently, the OpenWrt disk image was converted into VMware VMDK format prior to deployment.
+
+\subsection{Virtual Machine Configuration}
+
+A custom virtual machine configuration was selected in VMware Workstation Pro to allow manual control over networking interfaces and storage configuration.
+
+\begin{table}[H]
+\centering
+\caption{Initial OpenWrt VM Configuration}
+\begin{tabular}{|l|l|}
+\hline
+Setting & Value \\ \hline
+Guest OS & Other Linux 5.x 64-bit \\ \hline
+vCPUs & 1 \\ \hline
+Memory & 256 MB \\ \hline
+Primary Disk & OpenWrt VMDK \\ \hline
+Network Adapter 1 & NAT \\ \hline
+Network Adapter 2 & Host-only \\ \hline
+\end{tabular}
+\end{table}
+
+\subsection{Network Interface Design}
+
+Two virtual network adapters were configured for each virtual router node:
+
+\begin{itemize}
+    \item NAT adapter for WAN connectivity and package installation
+    \item Host-only adapter for internal mesh backbone communication
+\end{itemize}
+
+This architecture allowed the virtual environment to simulate isolated routed mesh connectivity while preserving Internet access for package installation and updates.
+
+\subsection{Initial Boot Validation}
+
+The OpenWrt virtual machine booted successfully after the VMDK disk image was attached to the VMware virtual SCSI controller.
+
+During startup, OpenWrt initialized both virtual Ethernet interfaces successfully:
+
+\begin{lstlisting}
+eth0 NIC Link is Up
+eth1 NIC Link is Up
+\end{lstlisting}
+
+The successful initialization confirmed that VMware virtual networking devices were correctly recognized by the OpenWrt kernel.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.45\textwidth]{figures/openwrt-first-init.png}
+\caption{Successful OpenWrt boot and interface initialization.}
+\label{fig:bootlog}
+\end{figure}
+
+\section{Network Troubleshooting and Recovery}
+
+\subsection{Initial Connectivity Failure}
+
+Initial deployment attempts failed to provide Internet connectivity.
+
+Observed symptoms included:
+
+\begin{itemize}
+    \item Missing default routes
+    \item Failed DNS resolution
+    \item Inability to ping external IP addresses
+    \item DHCP inconsistencies
+\end{itemize}
+
+Example failure:
+
+\begin{verbatim}
+ping -c 4 8.8.8.8
+Network unreachable
+\end{verbatim}
+
+Investigation revealed that VMware host-only networking was unintentionally acting as the WAN DHCP source. Multiple adapter configurations caused interface ambiguity and routing instability.
+
+Observed VMware virtual networks included:
+
+\begin{itemize}
+    \item VMnet1: 192.168.61.0/24
+    \item VMnet8: 192.168.111.0/24
+\end{itemize}
+
+\subsection{Controlled Simplification Strategy}
+
+To isolate the networking issue, the second adapter was temporarily removed and the deployment simplified to a single NAT interface.
+
+After simplification, the OpenWrt node successfully received:
+
+\begin{itemize}
+    \item DHCP assignment
+    \item Default gateway
+    \item External DNS access
+\end{itemize}
+
+Working configuration:
+
+\begin{verbatim}
+default via 192.168.111.2 dev eth0
+\end{verbatim}
+
+Successful validation tests included:
+
+\begin{verbatim}
+ping -c 4 8.8.8.8
+ping -c 4 google.com
+\end{verbatim}
+
+All tests completed successfully with zero packet loss.
+
+\subsection{Package Management Failure Analysis}
+
+Package management operations initially failed during APK repository access.
+
+Observed errors included:
+
+\begin{verbatim}
+wget exited with error 1
+unexpected end of file
+\end{verbatim}
+
+Further investigation revealed that BusyBox wget lacked HTTPS support:
+
+\begin{verbatim}
+wget https://downloads.openwrt.org/
+HTTPS support not compiled in.
+\end{verbatim}
+
+This explained repeated failures retrieving APK repository metadata over HTTPS.
+
+The issue represented a significant operational weakness because administrators were effectively forced to downgrade repository transport from HTTPS to HTTP in order to restore package functionality.
+
+Potential security implications included:
+
+\begin{itemize}
+    \item Man-in-the-middle attacks
+    \item Package tampering
+    \item Repository spoofing
+    \item Supply-chain compromise
+\end{itemize}
+
+\subsection{Temporary Package Recovery}
+
+HTTPS functionality was partially restored by manually transferring APK packages into the virtual machine and installing them locally:
+
+\begin{verbatim}
+apk add --allow-untrusted ./*.apk
+\end{verbatim}
+
+Repository transport was later temporarily modified from HTTPS to HTTP to restore repository index access.
+
+After modification:
+
+\begin{verbatim}
+apk update
+\end{verbatim}
+
+successfully completed.
+
+Core administrative packages were then installed successfully:
+
+\begin{verbatim}
+apk add nano
+apk add vim
+apk add curl
+apk add tcpdump
+apk add htop
+apk add bash
+apk add luci
+\end{verbatim}
+
+\section{LuCI Web Interface Deployment}
+
+After installation of LuCI, the OpenWrt web interface was initially inaccessible through:
+
+\begin{verbatim}
+http://192.168.1.1
+\end{verbatim}
+
+Diagnostic analysis using:
+
+\begin{verbatim}
+netstat -tlnp
+\end{verbatim}
+
+confirmed that the web server was actively listening on ports 80 and 443:
+
+\begin{verbatim}
+0.0.0.0:80 LISTEN
+0.0.0.0:443 LISTEN
+\end{verbatim}
+
+Further analysis revealed that the Windows host system could only directly access the VMware NAT interface rather than the internal OpenWrt LAN bridge.
+
+The LuCI interface became accessible using:
+
+\begin{verbatim}
+http://192.168.111.130
+\end{verbatim}
+
+rather than the internal bridge address.
+
+This demonstrated the distinction between:
+
+\begin{itemize}
+    \item Internal OpenWrt LAN addressing
+    \item Externally reachable VMware NAT addressing
+    \item Hypervisor network segmentation behavior
+\end{itemize}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.45\textwidth]{figures/luci1.png}
+\caption{Accessible LuCI web management login page}
+\label{fig:luci1}
+\end{figure}
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.45\textwidth]{figures/luci2.png}
+\caption{Accessible LuCI web management interface through VMware NAT networking.}
+\label{fig:luci2}
+\end{figure}
+
+\section{Multi-Node Mesh Backbone Construction}
+
+\subsection{Dual-Interface Mesh Backbone}
+
+After establishing a stable baseline, a second virtual adapter was reintroduced using VMware host-only networking.
+
+The second interface was assigned as a dedicated mesh backbone network:
+
+\begin{verbatim}
+uci set network.mesh=interface
+uci set network.mesh.proto='static'
+uci set network.mesh.device='eth1'
+uci set network.mesh.ipaddr='10.10.10.1'
+uci set network.mesh.netmask='255.255.255.0'
+uci commit network
+/etc/init.d/network restart
+\end{verbatim}
+
+Resulting topology:
+
+\begin{table}[H]
+\centering
+\caption{Dual-Interface OpenWrt Topology}
+\begin{tabular}{|l|l|l|}
+\hline
+Interface & Address & Purpose \\ \hline
+eth0 & 192.168.111.x & VMware NAT / WAN \\ \hline
+eth1 & 10.10.10.x & Internal mesh backbone \\ \hline
+\end{tabular}
+\end{table}
+
+Routing verification confirmed correct segmentation:
+
+\begin{verbatim}
+default via 192.168.111.2 dev eth0
+10.10.10.0/24 dev eth1
+\end{verbatim}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.45\textwidth]{figures/node1-route.png}
+\caption{Validated OpenWrt Node 1 routing table showing WAN and mesh backbone separation.}
+\label{fig:ip-route}
+\end{figure}
+
+
+\subsection{VM Cloning Strategy}
+
+Instead of reinstalling OpenWrt repeatedly, a stable “golden image” virtual machine was cloned using VMware full-clone functionality.
+
+Resulting nodes included:
+
+\begin{itemize}
+    \item OpenWrt-Node1
+    \item OpenWrt-Node2
+    \item OpenWrt-Node3
+    \item OpenWrt-Node4
+\end{itemize}
+
+Each node received:
+
+\begin{itemize}
+    \item Unique hostname
+    \item Unique mesh backbone address
+    \item VMware-generated MAC address
+\end{itemize}
+
+\subsection{Four-Node Mesh Backbone Validation}
+
+The resulting mesh backbone addressing scheme included:
+
+\begin{table}[H]
+\centering
+\caption{Four-Node Mesh Backbone Addressing}
+\begin{tabular}{|l|l|}
+\hline
+Node & Mesh Address \\ \hline
+OpenWrt-Node1 & 10.10.10.1 \\ \hline
+OpenWrt-Node2 & 10.10.10.2 \\ \hline
+OpenWrt-Node3 & 10.10.10.3 \\ \hline
+OpenWrt-Node4 & 10.10.10.4 \\ \hline
+\end{tabular}
+\end{table}
+
+Connectivity testing was performed between all nodes using ICMP echo requests.
+
+Successful bidirectional communication was verified between all nodes with:
+
+\begin{itemize}
+    \item Zero packet loss
+    \item Stable latency
+    \item Successful route propagation
+\end{itemize}
+
+The successful validation demonstrated:
+
+\begin{itemize}
+    \item Stable Layer 2 adjacency
+    \item Functional Layer 3 routing
+    \item Operational VMware host-only backbone networking
+    \item Successful multi-node OpenWrt virtualization
+\end{itemize}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.45\textwidth]{figures/node4-ping.png}
+\caption{Successful four-node mesh backbone connectivity validation.}
+\label{fig:node4-ping}
+\end{figure}
+
+\subsection{Sequential Startup and DHCP Convergence}
+
+Initial simultaneous startup of cloned nodes produced temporary WAN IP duplication behavior within the VMware NAT network.
+
+Multiple nodes briefly inherited identical DHCP leases from previous cloned states.
+
+This behavior was mitigated by sequential node startup. Sequential startup allowed VMware DHCP services to converge properly and assign unique WAN addresses based on MAC address differentiation.
+
+Final WAN assignments stabilized as:
+
+\begin{itemize}
+    \item Node1: 192.168.111.134
+    \item Node2: 192.168.111.136
+    \item Node3: 192.168.111.137
+    \item Node4: 192.168.111.138
+\end{itemize}
+
+This demonstrated:
+
+\begin{itemize}
+    \item DHCP lease convergence behavior
+    \item Temporary ARP instability during cloned startup
+    \item Virtualization timing dependencies
+    \item Successful MAC-based lease differentiation
+\end{itemize}
+
+\subsection{IPv6 Duplicate Address Detection Behavior}
+
+During sequential startup of cloned nodes, OpenWrt repeatedly reported IPv6 duplicate address detection warnings:
+
+\begin{verbatim}
+IPv6 duplicate address detected
+\end{verbatim}
+
+Despite repeated IPv6 duplicate detection events:
+
+\begin{itemize}
+    \item IPv4 routing remained stable
+    \item Mesh backbone communication remained operational
+    \item Node-to-node connectivity was unaffected
+\end{itemize}
+
+This behavior represents an important operational consideration for cloned embedded router deployments and virtualized distributed networking systems.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.45\textwidth]{figures/ipv6error.png}
+\caption{Observed IPv6 duplicate address detection during sequential startup of cloned OpenWrt nodes.}
+\label{fig:ipv6error}
+\end{figure}
+
+\section{Future LibreMesh and BATMAN-adv Deployment}
+
+Future implementation phases will include:
+
+\begin{itemize}
+    \item Installing LibreMesh packages
+    \item Configuring BATMAN-adv mesh routing
+    \item Constructing multi-hop routing experiments
+    \item Measuring convergence behavior
+    \item Evaluating node-failure resilience
+    \item Testing route propagation across distributed nodes
+\end{itemize}
+
+\section{Future Raspberry Pi Deployment}
+
+The final implementation stage will migrate the virtualized mesh environment onto Raspberry Pi hardware devices running OpenWrt and LibreMesh.
+
+The Raspberry Pi deployment will evaluate:
+
+\begin{itemize}
+    \item Physical wireless mesh formation
+    \item Real-world throughput and latency
+    \item Hardware limitations
+    \item Deployment obstacles
+    \item Inter-group node interoperability
+\end{itemize}
+
+\section{Conclusion}
+
+The virtualization phase successfully established a functional four-node OpenWrt distributed routing environment capable of supporting future LibreMesh experimentation.
+
+The implementation demonstrated:
+
+\begin{itemize}
+    \item Successful OpenWrt virtualization
+    \item Stable multi-node routed mesh backbone construction
+    \item Functional distributed node communication
+    \item Operational DHCP convergence behavior
+    \item Reproducible deployment methodology
+    \item Identification of virtualization and IPv6 edge cases
+\end{itemize}
+
+The completed environment now represents a reproducible distributed networking research platform suitable for future dynamic mesh routing experimentation using LibreMesh and BATMAN-adv.
+
+\bibliographystyle{IEEEtran}
+
+\begin{thebibliography}{99}
+
+\bibitem{openwrt}
+OpenWrt Project, ``OpenWrt Documentation,'' [Online]. Available: \url{https://openwrt.org}
+
+\bibitem{libremesh}
+LibreMesh Project, ``LibreMesh Documentation,'' [Online]. Available: \url{https://libremesh.org}
+
+\bibitem{bmx7}
+BMX7 Routing Protocol, ``BMX7 GitHub Repository,'' [Online]. Available: \url{https://github.com/bmx-routing/bmx7}
+
+\end{thebibliography}
+
+\end{document}
