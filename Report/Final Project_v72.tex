@@ -25,10 +25,10 @@ Virtualized and Raspberry Pi-Based Mesh Networking
 
 \author{
 \IEEEauthorblockN{\small
-Bastas, Dimitrios (SUPREMER LEFTIEUENT COMMANDER)\\
-Kamilos, Dimitrios (SUPREMEISH RIGHTIEUNENT COMMANDER)\\
+Bastas, Dimitrios (LT),
+Kamilos, Dimitrios (LT)\\
+Rachel Goldstein (LT),
 Robert Leyba (LT)\\
-Rachel Goldstein (LT)\\
 Margaret Moore (LTJG)
 }
 \IEEEauthorblockA{
@@ -1367,68 +1367,162 @@ These results confirmed that LibreMesh successfully established a functioning me
 \label{fig:mesh_validation}
 \end{figure}
 
-\subsection{Demonstration Plan and Presentation Validation}
+\subsection{Internet Gateway Deployment and Validation}
 
-To demonstrate successful operation of the LibreMesh deployment, a live classroom presentation is planned using two Raspberry Pi 5 nodes configured as mesh participants. The nodes will be interconnected using Ethernet and configured with LibreMesh firmware generated through the LibreMesh image builder.
+Following successful deployment of LibreMesh on Raspberry Pi 5 hardware, Internet gateway functionality was implemented using a dedicated Wide Area Network (WAN) interface. Initial attempts focused on providing Internet connectivity through wireless hotspot bridging; however, testing revealed that the Raspberry Pi 5 onboard wireless chipset could not reliably support simultaneous LibreMesh access point services, mesh functionality, and wireless client operation. As a result, a dedicated Ethernet-based gateway architecture was adopted.
 
-Each Raspberry Pi will be connected to a separate workstation to provide administrative access and real-time monitoring of mesh status. Audience members will be invited to join the LibreMesh wireless network using personal smartphones and mobile devices.
+The LibreMesh network configuration was modified to remove the second Ethernet interface (\texttt{eth1}) from the default bridge configuration. This interface was then reconfigured as a DHCP WAN interface and connected directly to an upstream residential router. Upon activation, the node successfully obtained an IP address from the upstream network and installed a default route to the Internet.
 
-The demonstration will focus on three primary validation activities:
-
-\begin{enumerate}
-\item Verification of BATMAN-adv neighbor discovery using:
-\begin{verbatim}
-batctl meshif bat0 n
-\end{verbatim}
-
-\item Verification of route propagation using:
-\begin{verbatim}
-batctl meshif bat0 o
-\end{verbatim}
-
-\item Verification of client connectivity through ICMP testing between connected devices.
-
-\end{enumerate}
-
-The BATMAN-adv neighbor and originator tables will provide visual confirmation that the mesh nodes have discovered one another and exchanged routing information. Client devices connected to separate nodes will then perform ping tests to demonstrate successful end-to-end communication through the mesh.
-
-This demonstration provides a practical validation of LibreMesh functionality and illustrates how decentralized mesh networking can provide connectivity without dependence on traditional centralized network infrastructure.
-
-\subsection{Providing Internet Access Through the Mesh}
-
-Although Internet connectivity was not fully implemented during this phase of the project, several methods for providing external network access to a LibreMesh deployment were investigated.
-
-One proposed approach involves connecting a host computer to an external Internet source, such as a wireless hotspot or wired network connection, while simultaneously connecting a second network interface to a LibreMesh node. The host system would then act as a gateway by bridging or sharing the Internet connection between interfaces.
-
-A conceptual topology is shown below:
+A simplified topology of the resulting configuration is shown below:
 
 \begin{verbatim}
 Internet
 |
-Host Computer
+Home Router
 |
-Network Bridge
+eth1 (WAN)
 |
-LibreMesh Node
+AR1
+|
+BATMAN-adv / LibreMesh
+|
+Wireless and Mesh Clients
+\end{verbatim}
+
+Verification of Internet connectivity was performed using standard network diagnostic tools. The node successfully acquired the address \texttt{192.168.1.235} from the upstream router and established a default route through gateway \texttt{192.168.1.254}. Connectivity was confirmed by successfully pinging external Internet hosts, including Google's public DNS server (\texttt{8.8.8.8}).
+
+LibreMesh AnyGW functionality was then enabled by configuring BATMAN-adv gateway mode as a server. Verification using BATMAN diagnostic tools confirmed that the node was advertising gateway services to participating mesh nodes.
+
+To validate end-user connectivity, an Apple iPhone was connected to the LibreMesh wireless access point (\texttt{EC3730}). The device successfully received a LibreMesh network address within the mesh subnet and was able to access external Internet resources through the gateway node. Client association was verified using wireless station monitoring tools, while routing behavior was confirmed through neighbor table inspection and Internet connectivity testing.
+
+This experiment demonstrated successful integration of LibreMesh routing, BATMAN-adv gateway services, wireless client access, and upstream Internet connectivity on physical Raspberry Pi hardware. The resulting configuration establishes the foundation required for future AnyGW testing involving multiple interconnected mesh nodes and automatic gateway discovery across the mesh network.
+
+\begin{figure}[htbp]
+\centerline{\includegraphics[width=\linewidth]{figures/ifstatus_wan1.png}}
+\caption{WAN interface successfully obtaining a DHCP address from the upstream router.}
+\label{fig:wan_dhcp}
+\end{figure}
+\begin{figure}[htbp]
+\centerline{\includegraphics[width=\linewidth]{figures/ifstatus_wan2.png}}
+\caption{WAN interface successfully obtaining a DHCP address from the upstream router.}
+\label{fig:wan_dhcp2}
+\end{figure}
+
+\begin{figure}[htbp]
+\centerline{\includegraphics[width=\linewidth]{figures/ping_8_8_8_8.png}}
+\caption{Successful Internet connectivity verification from the LibreMesh gateway node.}
+\label{fig:internet_ping}
+\end{figure}
+
+\begin{figure}[htbp]
+\centerline{\includegraphics[width=\linewidth]{figures/ip_neigh_phone_connected.png}}
+\caption{Neighbor table showing a wireless client connected to the LibreMesh access point and participating in the mesh network.}
+\label{fig:phone_connected}
+\end{figure}
+
+\begin{figure}[htbp]
+\centerline{\includegraphics[width=\linewidth]{figures/ip_neigh_phone_connected_phone.png}}
+\caption{Neighbor table showing a wireless client connected to the LibreMesh access point and participating in the mesh network.}
+\label{fig:phone_connected_phone}
+\end{figure}
+
+\subsection{Wireless Mesh Interface Investigation and Hardware Limitations}
+
+During testing, an effort was made to utilize LibreMesh's native IEEE 802.11s wireless mesh functionality on Raspberry Pi 5 hardware. LibreMesh automatically generated a wireless mesh interface (\texttt{wlan0-mesh}) and associated BATMAN-adv configuration; however, the interface repeatedly failed to become operational despite appearing correctly configured within OpenWrt.
+
+Several troubleshooting procedures were performed, including verification of wireless configuration files, inspection of kernel logs, interface status monitoring, and testing of simultaneous wireless access point and client operation. Although the mesh interface was present within the LibreMesh configuration, diagnostic commands consistently showed that the interface was unable to successfully initialize. Kernel logs repeatedly reported interface activation failures and MTU-related errors during wireless mesh initialization.
+
+Further investigation was conducted using the command:
+
+\begin{verbatim}
+iw phy phy0 info
+\end{verbatim}
+
+which revealed the wireless capabilities supported by the Raspberry Pi 5 onboard Broadcom wireless chipset. The supported interface modes included:
+
+\begin{itemize}
+\item Managed (Client)
+\item Access Point (AP)
+\item IBSS (Ad-Hoc)
+\item Peer-to-Peer (P2P)
+\end{itemize}
+
+However, the wireless driver did not advertise support for the IEEE 802.11s \texttt{mesh point} interface mode required for native wireless mesh networking. As a result, LibreMesh was unable to establish a functional wireless mesh interface despite generating the appropriate configuration.
+
+These findings suggest that the limitation originates from the Broadcom \texttt{brcmfmac} driver and associated firmware rather than from LibreMesh itself. While wireless access point functionality operated correctly and BATMAN-adv routing functioned successfully over Ethernet links, native wireless mesh operation could not be validated on the Raspberry Pi 5 platform using the onboard wireless hardware.
+
+Consequently, all successful mesh-network testing performed during this project utilized BATMAN-adv over Ethernet transport links between Raspberry Pi nodes. Wireless connectivity remained available for client devices through the LibreMesh access point service, allowing smartphones, laptops, and other devices to access the mesh network while routing functions were performed through wired backbone connections.
+
+Future work may investigate the use of external USB wireless adapters with confirmed IEEE 802.11s support, alternative OpenWrt-compatible hardware platforms, or updated wireless drivers that provide native mesh-point functionality.
+
+\begin{figure}[htbp]
+\centerline{\includegraphics[width=\linewidth]{figures/iw_phy_supported_modes.png}}
+\caption{Supported wireless interface modes reported by the Raspberry Pi 5 Broadcom wireless chipset. The absence of IEEE 802.11s mesh-point support prevented native wireless mesh operation.}
+\label{fig:iw_phy_modes}
+\end{figure}
+
+\subsection{Demonstration Plan and Presentation Validation}
+
+A live demonstration is planned to validate the physical LibreMesh deployment and illustrate mesh-network operation using two Raspberry Pi 5 nodes configured with LibreMesh firmware. The two nodes will be interconnected using an Ethernet backbone connection through their mesh interfaces, allowing BATMAN-adv to establish neighbor relationships and exchange routing information.
+
+One Raspberry Pi will be configured as an Internet gateway node. The gateway node will utilize a dedicated WAN interface connected to a laptop computer. The laptop will obtain Internet connectivity through a mobile hotspot connection and provide upstream network access to the LibreMesh node through Ethernet. This configuration will allow the LibreMesh gateway to distribute Internet access throughout the mesh network using LibreMesh AnyGW services.
+
+A simplified demonstration topology is shown below:
+
+\begin{verbatim}
+Mobile Hotspot
+|
+Laptop
+|
+Ethernet
+|
+AR1 (Gateway)
 |
 BATMAN-adv Mesh
 |
-Additional Nodes and Clients
+BR1 Node
+|
+Wireless Clients
 \end{verbatim}
 
-Under this design, one mesh node would serve as the gateway to external networks. LibreMesh includes support for AnyGW (Any Gateway), which enables nodes with Internet connectivity to advertise gateway availability throughout the mesh. Other nodes may then automatically discover and utilize the available gateway without requiring manual route configuration.
+Audience members will be invited to join the EC3730 wireless network using smartphones, tablets, and laptop computers. Devices connected to the wireless network will receive LibreMesh IP addresses and gain access to both local mesh resources and external Internet connectivity through the gateway node.
 
-Potential implementation approaches include:
+The demonstration will focus on four primary validation activities:
 
-\begin{itemize}
-\item Windows Network Bridging
-\item Windows Internet Connection Sharing (ICS)
-\item Linux Ethernet Bridging
-\item Dedicated WireGuard Gateway Nodes
-\item Direct WAN uplinks connected to individual LibreMesh nodes
-\end{itemize}
+\begin{enumerate}
 
-Future work will investigate integration of Internet gateway services with the LibreMesh deployment and evaluate the effectiveness of AnyGW in automatically distributing external connectivity across the mesh. Successful implementation would allow client devices connected to any mesh node to access Internet resources while maintaining decentralized mesh routing internally.
+\item Verification of BATMAN-adv neighbor discovery using:
+
+\begin{verbatim}
+batctl n
+\end{verbatim}
+
+This command will display neighboring mesh nodes and confirm successful Layer 2 mesh formation across the Ethernet backbone.
+
+\item Verification of route propagation and originator advertisements using:
+
+\begin{verbatim}
+batctl o
+\end{verbatim}
+
+The originator table will demonstrate that routing information is being exchanged between mesh participants and that BATMAN-adv has established valid forwarding paths.
+
+\item Verification of connected clients using:
+
+\begin{verbatim}
+ip neigh
+iw dev wlan0-ap station dump
+\end{verbatim}
+
+These commands will display client devices currently participating in the mesh network and verify successful wireless association with the LibreMesh access point.
+
+\item Verification of Internet connectivity and end-to-end communication.
+
+Connected users will be instructed to access Internet resources and perform ICMP connectivity tests. Participants will ping external hosts such as Google's public DNS server (\texttt{8.8.8.8}) and communicate with other connected devices to demonstrate successful routing through the mesh infrastructure.
+
+\end{enumerate}
+
+Successful completion of these tests will demonstrate operation of LibreMesh services, BATMAN-adv routing, AnyGW gateway functionality, wireless client access, and Internet connectivity within a physical mesh-network deployment. The presentation will provide a practical example of decentralized networking principles and illustrate how community mesh networks can distribute connectivity across multiple nodes while maintaining access to external network resources.
 
 
 \section{Unresolved Operational Challenges and Future Investigation}
