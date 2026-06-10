@@ -1676,6 +1676,23 @@ The project evolved significantly beyond initial router virtualization objective
 
 The completed environment represents a robust foundation for continued experimentation with decentralized community-networking infrastructure using LibreMesh and BATMAN-adv.
 
+\subsection{Post Presentation Conclusion}
+
+This project successfully implemented and evaluated LibreMesh and BATMAN-adv in both virtualized and physical deployment environments. Initial experimentation was conducted using a four-node OpenWrt mesh laboratory hosted within VMware, providing a controlled environment for studying decentralized routing behavior, fault tolerance, route propagation, and mesh-network management. The project was subsequently extended to physical Raspberry Pi 5 hardware, where LibreMesh was deployed and validated using real wireless clients and Internet gateway services.
+
+The completed deployment demonstrated successful OpenWrt virtualization, BATMAN-adv mesh formation, autonomous neighbor discovery, dynamic route propagation, persistent configuration management through UCI, and recovery from topology changes. Additional testing validated wireless client connectivity, Internet gateway functionality, and operation of LibreMesh AnyGW services. A dedicated WAN interface was successfully implemented on a Raspberry Pi node, allowing Internet connectivity to be distributed to wireless clients connected through the mesh network.
+
+A key outcome of this project was understanding the interaction between multiple routing technologies within LibreMesh. BATMAN-adv operates primarily as a Layer 2 mesh-routing protocol, creating a virtual distributed Ethernet segment across participating nodes. Unlike traditional routing protocols such as OSPF, BATMAN-adv does not maintain a complete network topology database or compute shortest paths using Dijkstra's algorithm. Instead, nodes exchange Originator Messages (OGMs) and determine only the best next-hop neighbor toward each destination. This approach reduces routing overhead and improves adaptability in dynamic mesh environments.
+
+LibreMesh additionally incorporates the Babel routing protocol, which operates at Layer 3 and is responsible for exchanging IP routing information between nodes. While BATMAN-adv provides distributed Layer 2 connectivity, Babel contributes Layer 3 route dissemination and network reachability information. Together, these protocols provide a hybrid architecture that combines Layer 2 mesh forwarding with Layer 3 routing intelligence.
+
+Internet gateway distribution is facilitated through LibreMesh AnyGW functionality. AnyGW allows nodes possessing Internet connectivity to advertise gateway services throughout the mesh. Other mesh participants may automatically discover and utilize available gateways without requiring manual route configuration. Testing demonstrated successful operation of a gateway-enabled Raspberry Pi node and validated Internet access from wireless client devices connected to the mesh.
+
+The project also revealed several practical implementation considerations. Configuration files stored by OpenWrt and LibreMesh maintain wireless SSIDs and pre-shared keys in plain-text format within system configuration files rather than storing only cryptographic hashes. While this simplifies administration and automated deployment, it also highlights the importance of securing administrative access to mesh nodes and protecting configuration backups from unauthorized disclosure.
+
+Overall, the completed environment represents a functional distributed mesh-networking platform suitable for continued experimentation with decentralized community networking, Internet gateway distribution, routing protocol analysis, and future extensions involving WireGuard integration, larger mesh deployments, and advanced LibreMesh services. The project successfully demonstrated both the theoretical and practical aspects of modern mesh networking and established a robust foundation for future research and development.
+
+
 \bibliographystyle{IEEEtran}
 
 \begin{thebibliography}{99}
