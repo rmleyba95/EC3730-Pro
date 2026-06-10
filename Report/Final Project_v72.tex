@@ -1797,4 +1797,363 @@ The following exported artifacts were generated and archived from each OpenWrt n
 
 These artifacts provide reproducible deployment state information and operational validation for the completed distributed BATMAN-adv mesh environment.
 
+\appendix
+
+\section{Command Reference}
+
+This appendix documents the primary commands used throughout the project during virtual machine development, Git repository management, LibreMesh deployment, BATMAN-adv configuration, AnyGW implementation, and system validation.
+
+\subsection{VMware and Windows Commands}
+
+\subsubsection{Network Configuration}
+
+\paragraph{Display Network Configuration}
+\begin{verbatim}
+ipconfig
+\end{verbatim}
+Displays the IP configuration of all network adapters including IPv4 addresses, subnet masks, and default gateways.
+
+\paragraph{Display Detailed Network Configuration}
+\begin{verbatim}
+ipconfig /all
+\end{verbatim}
+Displays detailed information about all network adapters, including MAC addresses, DHCP information, DNS servers, and lease information.
+
+\paragraph{Ping a Device}
+\begin{verbatim}
+ping <IP Address>
+\end{verbatim}
+Tests network connectivity to another device by sending ICMP echo requests.
+
+Example:
+\begin{verbatim}
+ping 10.13.99.87
+\end{verbatim}
+
+\paragraph{Display ARP Table}
+\begin{verbatim}
+arp -a
+\end{verbatim}
+Displays the Address Resolution Protocol (ARP) cache showing IP-to-MAC address mappings.
+
+\subsubsection{SSH Connectivity}
+
+\paragraph{Connect to a LibreMesh Node}
+\begin{verbatim}
+ssh root@<IP Address>
+\end{verbatim}
+Creates a secure shell connection to a LibreMesh node.
+
+Example:
+\begin{verbatim}
+ssh root@10.13.99.87
+\end{verbatim}
+
+\subsubsection{Git Repository Management}
+
+\paragraph{Check Repository Status}
+\begin{verbatim}
+git status
+\end{verbatim}
+Displays modified, staged, and untracked files.
+
+\paragraph{Add All Files}
+\begin{verbatim}
+git add .
+\end{verbatim}
+Stages all modified files for commit.
+
+\paragraph{Create Commit}
+\begin{verbatim}
+git commit -m "Commit Message"
+\end{verbatim}
+Creates a snapshot of the repository changes.
+
+\paragraph{Upload Changes}
+\begin{verbatim}
+git push
+\end{verbatim}
+Uploads local commits to the remote repository.
+
+\paragraph{Clone Repository}
+\begin{verbatim}
+git clone <repository-url>
+\end{verbatim}
+Downloads a repository from a remote source.
+
+\paragraph{Pull Updates}
+\begin{verbatim}
+git pull
+\end{verbatim}
+Downloads and merges updates from the remote repository.
+
+\paragraph{Remove Cached File}
+\begin{verbatim}
+git rm --cached <filename>
+\end{verbatim}
+Removes a file from Git tracking while keeping the local copy.
+
+\paragraph{Remove All Cached Files}
+\begin{verbatim}
+git rm -r --cached .
+\end{verbatim}
+Removes all files from Git tracking without deleting local copies.
+
+\subsection{Raspberry Pi and LibreMesh Commands}
+
+\subsubsection{Wireless Configuration}
+
+\paragraph{Display Wireless Configuration}
+\begin{verbatim}
+uci show wireless
+\end{verbatim}
+Displays all wireless settings stored in OpenWrt.
+
+\paragraph{Display Wireless Interfaces}
+\begin{verbatim}
+iw dev
+\end{verbatim}
+Displays all wireless interfaces and operating modes.
+
+\paragraph{Display Wireless Information}
+\begin{verbatim}
+iwinfo
+\end{verbatim}
+Displays SSID, channel, encryption, signal levels, and interface status.
+
+\paragraph{Scan Nearby Wireless Networks}
+\begin{verbatim}
+iw dev wlan0-mesh scan | grep SSID
+\end{verbatim}
+Scans for nearby wireless networks and displays detected SSIDs.
+
+\paragraph{Reload Wireless Configuration}
+\begin{verbatim}
+wifi reload
+\end{verbatim}
+Applies wireless configuration changes without requiring a reboot.
+
+\subsubsection{Network Configuration}
+
+\paragraph{Display Network Configuration}
+\begin{verbatim}
+uci show network
+\end{verbatim}
+Displays all OpenWrt network settings.
+
+\paragraph{Display Interface Status}
+\begin{verbatim}
+ifstatus <interface>
+\end{verbatim}
+Displays operational information about a network interface.
+
+Examples:
+\begin{verbatim}
+ifstatus wan
+ifstatus wwan
+\end{verbatim}
+
+\paragraph{Display IP Addresses}
+\begin{verbatim}
+ip addr
+\end{verbatim}
+Shows all network interfaces and assigned IP addresses.
+
+\paragraph{Display Routing Table}
+\begin{verbatim}
+ip route
+\end{verbatim}
+Displays the kernel routing table.
+
+\paragraph{Display Neighbor Table}
+\begin{verbatim}
+ip neigh
+\end{verbatim}
+Displays neighboring devices discovered through ARP and IPv6 Neighbor Discovery.
+
+\paragraph{Restart Networking}
+\begin{verbatim}
+/etc/init.d/network restart
+\end{verbatim}
+Restarts all OpenWrt networking services.
+
+\subsubsection{UCI Configuration Commands}
+
+\paragraph{Read Configuration Value}
+\begin{verbatim}
+uci get <option>
+\end{verbatim}
+Displays the current value of a configuration option.
+
+Example:
+\begin{verbatim}
+uci get network.bat0.gw_mode
+\end{verbatim}
+
+\paragraph{Modify Configuration}
+\begin{verbatim}
+uci set <option>=<value>
+\end{verbatim}
+Changes a configuration setting.
+
+Example:
+\begin{verbatim}
+uci set wireless.lm_wlan0_ap_radio0.ssid='EC3730A'
+\end{verbatim}
+
+\paragraph{Delete Configuration Entry}
+\begin{verbatim}
+uci delete <section>
+\end{verbatim}
+Removes a configuration section.
+
+Example:
+\begin{verbatim}
+uci delete wireless.wifinet3
+\end{verbatim}
+
+\paragraph{Commit Configuration Changes}
+\begin{verbatim}
+uci commit
+\end{verbatim}
+Writes configuration changes to disk.
+
+\paragraph{Commit Wireless Changes}
+\begin{verbatim}
+uci commit wireless
+\end{verbatim}
+Writes wireless configuration changes to disk.
+
+\subsubsection{BATMAN-adv Commands}
+
+\paragraph{Display Neighbor Table}
+\begin{verbatim}
+batctl n
+\end{verbatim}
+Displays neighboring BATMAN-adv mesh nodes.
+
+\paragraph{Display Originator Table}
+\begin{verbatim}
+batctl o
+\end{verbatim}
+Displays routing information exchanged between mesh nodes.
+
+\paragraph{Display Gateway List}
+\begin{verbatim}
+batctl gwl
+\end{verbatim}
+Displays available BATMAN gateway servers.
+
+\paragraph{Display Gateway Mode}
+\begin{verbatim}
+batctl gw_mode
+\end{verbatim}
+Displays whether the node is operating as a gateway client or server.
+
+\subsubsection{Connectivity Testing}
+
+\paragraph{Ping External Host}
+\begin{verbatim}
+ping 8.8.8.8
+\end{verbatim}
+Tests Internet connectivity using Google's public DNS server.
+
+\paragraph{Ping Domain Name}
+\begin{verbatim}
+ping google.com
+\end{verbatim}
+Tests Internet connectivity and DNS resolution.
+
+\subsubsection{Bridge Verification}
+
+\paragraph{Display Bridge Configuration}
+\begin{verbatim}
+brctl show
+\end{verbatim}
+Displays Linux bridge interfaces and associated ports.
+
+\subsubsection{Client Verification}
+
+\paragraph{Display Connected Wireless Clients}
+\begin{verbatim}
+iw dev wlan0-ap station dump
+\end{verbatim}
+Displays wireless clients currently associated with the access point.
+
+\subsubsection{LibreMesh Validation Scripts}
+
+\paragraph{Connectivity Validation}
+\begin{verbatim}
+./test_connectivity.sh
+\end{verbatim}
+Custom script used to verify network connectivity and LibreMesh status.
+
+\paragraph{Mesh Validation}
+\begin{verbatim}
+./check_mesh.sh
+\end{verbatim}
+Custom script used to display mesh interfaces, neighbors, routes, and wireless information.
+
+\subsubsection{Thermal Monitoring}
+
+\paragraph{Display CPU Temperature}
+\begin{verbatim}
+cat /sys/class/thermal/thermal_zone0/temp
+\end{verbatim}
+Displays Raspberry Pi CPU temperature in millidegrees Celsius.
+
+\paragraph{Display Cooling Device Type}
+\begin{verbatim}
+cat /sys/class/thermal/cooling_device0/type
+\end{verbatim}
+Displays the active cooling device driver.
+
+\paragraph{Display Current Fan State}
+\begin{verbatim}
+cat /sys/class/thermal/cooling_device0/cur_state
+\end{verbatim}
+Displays the current fan speed state.
+
+\paragraph{Display Maximum Fan State}
+\begin{verbatim}
+cat /sys/class/thermal/cooling_device0/max_state
+\end{verbatim}
+Displays the maximum supported fan speed state.
+
+\paragraph{Search for Fan Events}
+\begin{verbatim}
+dmesg | grep -i fan
+\end{verbatim}
+Searches kernel logs for fan-related events.
+
+\paragraph{Display PWM Fan Controls}
+\begin{verbatim}
+ls /sys/class/hwmon/hwmon*/pwm*
+\end{verbatim}
+Lists available PWM fan control interfaces.
+
+\subsubsection{AnyGW Gateway Configuration}
+
+\paragraph{Remove Interface from LAN Bridge}
+\begin{verbatim}
+uci del_list network.@device[0].ports='eth1'
+\end{verbatim}
+Removes the second Ethernet interface from the LibreMesh bridge.
+
+\paragraph{Create WAN Interface}
+\begin{verbatim}
+uci set network.wan='interface'
+uci set network.wan.device='eth1'
+uci set network.wan.proto='dhcp'
+\end{verbatim}
+Creates a dedicated WAN interface using DHCP.
+
+\paragraph{Enable BATMAN Gateway Server Mode}
+\begin{verbatim}
+uci set network.bat0.gw_mode='server'
+uci commit network
+/etc/init.d/network restart
+\end{verbatim}
+Configures the node to advertise itself as an Internet gateway to mesh participants.
+
 \end{document}
